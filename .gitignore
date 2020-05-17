@@ -1,8 +1,7 @@
 .vscode
 __pycache__
 venv
-trivia
-node_modules/
+node_modules
 
 # OS generated files #
 ######################
