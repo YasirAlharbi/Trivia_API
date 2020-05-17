@@ -72,20 +72,145 @@ This README is missing documentation of your endpoints. Below is an example for 
 
 Endpoints
 GET '/categories'
-GET ...
-POST ...
-DELETE ...
+GET '/questions'
+POST '/questions'
+DELETE '/questions'
+POST '/questions/search'
+GET '/categories/<int:id>/questions'
+POST '/quizzes'
 
 GET '/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
+- Fetches a list of categories , the value is the corresponding string of the category
 - Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
+- Returns: An object with a single key, categories,  pairs. 
+- status code: 200
+
+{
+    'categories': [
+        art,
+        science,
+        ...
+    ],
+    'success': True
+}
+
+GET '/questions'
+- Fetches a list of questions
+- Pagination : 10
+- Request Arguments: None
+- Returns: An object with: 
+    - list of questions
+    - Total number of questions
+    - list of categories
+    - current category
+- status code : 200
+
+{
+  "categories": [
+    "Science",
+    ...
+  ],
+  "current_category": "all",
+  "questions": [
+    {
+      "answer": "Genesis",
+      "category": "Art",
+      "category_id": 3,
+      "difficulty": 2,
+      "id": 12,
+      "question": "what is the first book in the bible"
+    },
+    ...
+  ],
+  "success": true,
+  "total_questions": 23
+}
+
+POST '/questions'
+- Creates a new question
+- Request Arguments: None
+- Returns: An object with a message 
+- status code : 201  
+
+- sample post data : 
+{
+	"question": "question",
+	"answer": "answer",
+	"category": 1,
+	"difficulty": 1
+}
+
+returned data:
+{
+    'success': True,
+    'message': 'Question Successfully added.'
+}
+
+DELETE '/questions'
+- Deletes a particular question.
+- Request Arguments: None
+- Returns: An object with a messsage. 
+- status code on succes: 200
+- status code on failure: 404
+
+returned data:
+{
+    'success': True,
+    'message': 'Question Successfully deleted.'
+}
+
+POST '/questions/search'
+- Fetches questions that have th e search term
+- Request Arguments: None
+- Returns: An object with: 
+    - list of questions
+    - Total number of questions
+    - list of categories
+    - current category
+- status code: 200
+
+- sample post data : 
+{
+	"searchTerm": "happy"
+}
+
+
+POST '/quizzes'
+- Fetches a list of questions based on selected category in which the keys are the ids and the value is the corresponding string of the category
+- Request Arguments: None
+- Returns: An object with 2 keys,
+  - success that contains a boolean that indicates success/failure of the request.
+  - question that contains a question to display next.
+- status code: 200
+
+{
+  "question": {
+    "answer": "...",
+    "category": 1,
+    "difficulty": 1,
+    "id": 1,
+    "question": "..."
+  },
+  "success": true
+} 
+
+GET '/categories/<int:id>/questions'
+- Fetches questions based on selected category
+- Request Arguments: None
+- Returns: An object with: 
+    - list of questions
+    - Total number of questions
+    - list of categories
+    - current category
+- status code: 200
+
+
+Status Codes
+201 - created
+200 - ok
+404 - Not found
+400 - Bad request
+422 - Unprocessable
 
 ```
 
