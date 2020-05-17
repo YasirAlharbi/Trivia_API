@@ -15,8 +15,16 @@ class TriviaTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_name = "trivia_test"
-        self.database_path = "postgres://{}@{}/{}".format("akira", 'localhost:5432', self.database_name)
-        setup_db(self.app, self.database_path)
+        self.password = 'postgres'
+        self.user = 'postgres'
+        self.database_path = "postgres://{}:{}@{}/{}".format(self.user, self.password,'localhost:5432', self.database_name)
+        setup_db(self.app, self.database_path) 
+        self.new_question = {
+            "question": "question",
+            "answer": "answer",
+            "category": 1,
+            "difficulty": 2
+        }
 
         # binds the app to the current context
         with self.app.app_context():
@@ -29,145 +37,72 @@ class TriviaTestCase(unittest.TestCase):
         """Executed after reach test"""
         pass
 
-    # get categories should return success response
-    def test_200_get_categories(self):
-        res = self.client().get('/categories')
-        
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-
-
-    def test_get_paginated_questions(self):
-        """Tests question pagination success"""
-
-        # get response and load data
-        response = self.client().get('/questions')
+    """
+    TODO
+    Write at least one test for each test for successful operation and for expected errors.
+    """
+    def test_get_all_categories_success(self):
+        '''
+            Tests get all categories
+        '''
+        response = self.client().get('/categories')
         data = json.loads(response.data)
 
-        # check status code and message
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['success'], True)
+    
+    def test_get_categories_with_wrong_route_failure(self):
+        '''
+            Test calling a wrong endpoint
+        '''
+        response = self.client().get('/category')
 
-        # check that total_questions and questions return data
-        self.assertTrue(data['total_questions'])
-        self.assertTrue(data['categories'])
-        self.assertTrue(len(data['questions']))
-
-    def test_404_request_beyond_valid_page(self):
-        """Tests question pagination failure 404"""
-
-        # send request with bad page data, load response
-        response = self.client().get('/questions?page=100')
+        self.assertEqual(response.status_code, 404)
+    
+    def test_create_question_success(self):
+        '''
+            Test create question
+        '''
+        response = self.client().post('/questions',
+                                      content_type='application/json',
+                                      data=json.dumps(self.new_question))
         data = json.loads(response.data)
 
-        # check status code and message
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(data['message'], "Question Successfully added.")
+        self.assertEqual(data['success'], True)
+    
+    def test_delete_question_with_valid_id__success(self):
+        '''
+            Tests delete a question by id
+        '''
+        response = self.client().post('/questions',
+                                      content_type='application/json',
+                                      data=json.dumps(self.new_question))
+        respons = self.client().delete('/questions/1')
+        print(respons.data)
+
+        self.assertEqual(respons.status_code, 200)
+    
+    def test_delete_question_with_invalid_id_failure(self):
+        '''
+            Tests delete a question by id
+        '''
+        response = self.client().delete('/questions/10000')
+        data = json.loads(response.data)
+
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(data['message'], "resource not found")
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'resource not found')
 
-    # delete existing question should return success response
-    def test_200_delete_existing_question(self):
-        res = self.client().delete('/questions/12')
-        data = json.loads(res.data)
+    def test_route_wrong_method_failure(self):
+        '''
+            Tests enpoint with wrong method
+        '''
+        response = self.client().patch('/categories')
 
-        self.assertEqual(res.status_code, 200)
-        self.assertEquals(data['success'], True)
+        self.assertEqual(response.status_code, 405)   
 
-    
-    # delete non existing question should return 404 response
-    def test_404_delete_non_existing_question(self):
-        res = self.client().delete('/questions/999')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], "unprocessable")
-    
-        # post non existing question should return success response
-    def test_200_post_non_existing_question(self):
-        res = self.client().post('/questions', json={'question':"question non existing", 
-        'answer': "non existing answer", 'difficulty': 3, 'category': "3"})
-
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-
-
-    # post question using wrong parameter (category non existing) should return 422 response
-    def test_422_post_question_with_bad_parameters(self):
-        res = self.client().post('/questions', json={'question':"question non existing", 
-        'answer': "non existing answer", 'difficulty': 10, 'category': "10"})
-
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], "unprocessable")
-    
-     # get questions using existing search term should return success response
-    def test_200_get_question_by_search_term(self):
-        res = self.client().post('/questions', json={'searchTerm':"the"})
-
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-
-
-    # get questions using non existing search term should return 404 response
-    def test_404_get_question_by_inexisten_search_term(self):
-        res = self.client().post('/search', json={'searchTerm':"supercalifragilistico"})
-
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
-        self.assertTrue(data['message'], "Resource Not Found")
-
-    
-    # get questions by existing category should return success response
-    def test_200_get_questions_by_category(self):
-        res = self.client().get('/categories/5/questions')
-        
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-
-
-    # get questions by non existing category should return 404 response
-    def test_404_get_questions_by_inexistent_category(self):
-        res = self.client().get('/categories/99/questions')
-        
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
-        self.assertTrue(data['message'], "Resource Not Found")
-
-
-    # get quiz questions using correct request body should return success response
-    def test_200_get_quizzes(self):
-        res = self.client().post('/quizzes', json={'previous_questions':[], 'quiz_category': {'id':1,'type':'Science'}})
-
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-
-
-    # get quiz questions using wrong request parameters should return 404 response
-    def test_404_get_quizzes_of_inexistent_category(self):
-        res = self.client().post('/quizzes', json={'previous_questions':[], 'quiz_category': {'id':99,'type':'Non existing'}})
-
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
-        self.assertTrue(data['message'], "Resource Not Found")
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
